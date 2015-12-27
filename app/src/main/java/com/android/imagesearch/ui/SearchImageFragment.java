@@ -3,7 +3,6 @@ package com.android.imagesearch.ui;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
@@ -11,7 +10,6 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.DecelerateInterpolator;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -32,7 +30,6 @@ import java.util.List;
 import retrofit.Callback;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
-
 import retrofit.mime.TypedByteArray;
 
 
@@ -43,10 +40,9 @@ public class SearchImageFragment extends Fragment {
 
 
     private RecyclerView mImageList;
-    private GridLayoutManager mGridLayoutManager;
-    private ImageListAdapter mAdapter;
 
     private final int GRID_SPAN_COUNT = 2;
+    private final String THUMB_SIZE_IN_PX = "225";
     private EditText searchEt;
     private TextView mEmptyText;
     private ProgressBar mProgressBar;
@@ -71,14 +67,20 @@ public class SearchImageFragment extends Fragment {
         searchEt = (EditText) view.findViewById(R.id.frag_search_image_et);
         mEmptyText = (TextView) view.findViewById(R.id.emptyText);
         mProgressBar = (ProgressBar) view.findViewById(R.id.progressBar);
-        mGridLayoutManager = new GridLayoutManager(getActivity(), GRID_SPAN_COUNT);
+
+        GridLayoutManager mGridLayoutManager = new GridLayoutManager(getActivity(), GRID_SPAN_COUNT);
         mImageList.setLayoutManager(mGridLayoutManager);
+
         if (ConnectionUtils.isNetworkConnected(getActivity())) {
             searchImages();
         } else
             Toast.makeText(getActivity(), R.string.no_internet_connection, Toast.LENGTH_SHORT).show();
     }
 
+    /**
+     * Set listener for search images whenever user types a new search
+     * term , an api called associated with that search term
+     */
     private void searchImages() {
         searchEt.addTextChangedListener(new TextWatcher() {
             @Override
@@ -90,7 +92,7 @@ public class SearchImageFragment extends Fragment {
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
                 if (charSequence.length() > 1) {
                     changeVisibility(View.GONE, View.VISIBLE);
-                    getImageList(charSequence.toString(), "225");
+                    getImageList(charSequence.toString());
                 }
             }
 
@@ -101,19 +103,26 @@ public class SearchImageFragment extends Fragment {
         });
     }
 
-    private void getImageList(String searchText, String thumbSize) {
+    /**
+     * Get all images list from server as user types in search box.
+     *
+     * @param searchText
+     */
+    private void getImageList(String searchText) {
 
-        mImageDataList.clear();
-        ImageSearchApiClient.getImageSearchApi().getImageList(searchText, thumbSize, new Callback<Response>() {
+        ImageSearchApiClient.getImageSearchApi().getImageList(searchText, THUMB_SIZE_IN_PX, new Callback<Response>() {
             @Override
             public void success(Response response, Response response2) {
                 if (response != null) {
                     String jsonResponse = new String(((TypedByteArray) response.getBody()).getBytes());
+                    // Reset list to show fresh data each time api called
+                    mImageDataList.clear();
                     parseJsonResponse(jsonResponse);
                     setImageListAdapter();
                     changeVisibility(View.GONE, View.GONE);
                 } else {
-                    changeVisibility(View.VISIBLE, View.GONE);
+                    Toast.makeText(getActivity(), R.string.empty_text_string, Toast.LENGTH_SHORT).show();
+                    mProgressBar.setVisibility(View.GONE);
                 }
             }
 
@@ -124,17 +133,30 @@ public class SearchImageFragment extends Fragment {
         });
     }
 
+    /**
+     * Set Adapter for recycler list of images after api hit.
+     */
     private void setImageListAdapter() {
-        mAdapter = new ImageListAdapter(getActivity(), mImageDataList);
+        ImageListAdapter mAdapter = new ImageListAdapter(getActivity(), mImageDataList);
         mImageList.setAdapter(mAdapter);
         mAdapter.notifyDataSetChanged();
     }
 
-    private void changeVisibility(int progressVisibility, int textVisbility) {
+    /**
+     * Change visibility of empty text and progress bar.
+     *
+     * @param progressVisibility
+     * @param textVisibility
+     */
+    private void changeVisibility(int progressVisibility, int textVisibility) {
         mEmptyText.setVisibility(progressVisibility);
-        mProgressBar.setVisibility(textVisbility);
+        mProgressBar.setVisibility(textVisibility);
     }
 
+    /**
+     * Parse json response returned from server.
+     * @param response
+     */
     private void parseJsonResponse(String response) {
         try {
             JSONObject obj = new JSONObject(response);

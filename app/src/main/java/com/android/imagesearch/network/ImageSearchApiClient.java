@@ -1,10 +1,6 @@
 package com.android.imagesearch.network;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 import retrofit.RestAdapter;
-import retrofit.android.MainThreadExecutor;
 
 /**
  * Created by hp pc on 26-12-2015.
@@ -18,6 +14,11 @@ public final class ImageSearchApiClient {
         //Empty Constructor
     }
 
+    /**
+     * Create a Rest adapter for api.
+     *
+     * @return
+     */
     private static RestAdapter getRestAdapter() {
 
         RestAdapter restAdapter = new RestAdapter.Builder()
@@ -28,6 +29,10 @@ public final class ImageSearchApiClient {
         return restAdapter;
     }
 
+    /**
+     * Reteruns rest interface of image search api.
+     * @return
+     */
     public static ImageSearchApiInterface getImageSearchApi() {
         if (imageSearchApiInterface == null)
             imageSearchApiInterface = getRestAdapter().create(ImageSearchApiInterface.class);

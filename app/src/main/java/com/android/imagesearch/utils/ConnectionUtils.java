@@ -13,6 +13,12 @@ public final class ConnectionUtils {
         //Empty Constructor
     }
 
+    /**
+     * Check for network connection
+     *
+     * @param context
+     * @return
+     */
     public static boolean isNetworkConnected(Context context) {
         ConnectivityManager cm = (ConnectivityManager)context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo ni = cm.getActiveNetworkInfo();

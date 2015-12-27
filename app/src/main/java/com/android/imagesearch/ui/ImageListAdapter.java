@@ -69,12 +69,6 @@ public class ImageListAdapter extends RecyclerView.Adapter<ImageListAdapter.View
     }
 
     public interface OnItemClickListener {
-        public void onItemClick(View v, int position);
-    }
-
-    public void resetAdapter()
-    {
-        mImageDataList.clear();
-        notifyDataSetChanged();
+        void onItemClick(View v, int position);
     }
 }

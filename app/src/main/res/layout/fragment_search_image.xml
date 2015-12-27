@@ -13,6 +13,7 @@
         android:layout_height="wrap_content"
         android:inputType="textNoSuggestions"
         android:hint="@string/hint_search_image"
+        android:singleLine="true"
         />
 
     <android.support.v7.widget.RecyclerView

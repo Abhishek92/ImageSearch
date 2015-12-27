@@ -139,6 +139,7 @@ public class SearchImageFragment extends Fragment {
     private void setImageListAdapter() {
         ImageListAdapter mAdapter = new ImageListAdapter(getActivity(), mImageDataList);
         mImageList.setAdapter(mAdapter);
+        mImageList.scheduleLayoutAnimation();
         mAdapter.notifyDataSetChanged();
     }
 

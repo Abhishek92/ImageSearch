@@ -16,13 +16,14 @@
         android:singleLine="true"
         />
 
-    <android.support.v7.widget.RecyclerView
+    <com.android.imagesearch.widgets.GridRecyclerView
         android:id="@+id/frag_search_image_list"
         android:scrollbars="vertical"
         android:layout_below="@id/frag_search_image_et"
         android:layout_marginTop="10dp"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layoutAnimation="@anim/grid_animation"
         />
 
     <TextView

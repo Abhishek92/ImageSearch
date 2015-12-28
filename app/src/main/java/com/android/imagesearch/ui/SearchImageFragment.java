@@ -1,17 +1,26 @@
 package com.android.imagesearch.ui;
 
 
+import android.app.Dialog;
+import android.content.DialogInterface;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
+import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.view.animation.AnimationUtils;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -19,6 +28,8 @@ import com.android.imagesearch.R;
 import com.android.imagesearch.network.ImageSearchApiClient;
 import com.android.imagesearch.network.model.ImageData;
 import com.android.imagesearch.utils.ConnectionUtils;
+import com.android.imagesearch.utils.DialogUtils;
+import com.squareup.picasso.Picasso;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -36,13 +47,10 @@ import retrofit.mime.TypedByteArray;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class SearchImageFragment extends Fragment {
-
+public class SearchImageFragment extends Fragment implements ImageListAdapter.OnItemClickListener
+{
 
     private RecyclerView mImageList;
-
-    private final int GRID_SPAN_COUNT = 2;
-    private final String THUMB_SIZE_IN_PX = "225";
     private EditText searchEt;
     private TextView mEmptyText;
     private ProgressBar mProgressBar;
@@ -68,7 +76,7 @@ public class SearchImageFragment extends Fragment {
         mEmptyText = (TextView) view.findViewById(R.id.emptyText);
         mProgressBar = (ProgressBar) view.findViewById(R.id.progressBar);
 
-        GridLayoutManager mGridLayoutManager = new GridLayoutManager(getActivity(), GRID_SPAN_COUNT);
+        GridLayoutManager mGridLayoutManager = new GridLayoutManager(getActivity(), 2);
         mImageList.setLayoutManager(mGridLayoutManager);
 
         if (ConnectionUtils.isNetworkConnected(getActivity())) {
@@ -82,22 +90,29 @@ public class SearchImageFragment extends Fragment {
      * term , an api called associated with that search term
      */
     private void searchImages() {
-        searchEt.addTextChangedListener(new TextWatcher() {
+        searchEt.addTextChangedListener(new TextWatcher()
+        {
             @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2)
+            {
 
             }
 
             @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                if (charSequence.length() > 1) {
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2)
+            {
+                String searchTerm = charSequence.toString().trim();
+                // Starts search only when user type words more then 1.
+                if(searchTerm.length() > 1 && !TextUtils.isEmpty(searchTerm))
+                {
                     changeVisibility(View.GONE, View.VISIBLE);
-                    getImageList(charSequence.toString());
+                    getImageList(searchTerm);
                 }
             }
 
             @Override
-            public void afterTextChanged(Editable editable) {
+            public void afterTextChanged(Editable editable)
+            {
 
             }
         });
@@ -110,24 +125,30 @@ public class SearchImageFragment extends Fragment {
      */
     private void getImageList(String searchText) {
 
-        ImageSearchApiClient.getImageSearchApi().getImageList(searchText, THUMB_SIZE_IN_PX, new Callback<Response>() {
+        ImageSearchApiClient.getImageSearchApi().getImageList(searchText, getWidthInPixels(), new Callback<Response>()
+        {
             @Override
-            public void success(Response response, Response response2) {
-                if (response != null) {
+            public void success(Response response, Response response2)
+            {
+                if(response != null)
+                {
                     String jsonResponse = new String(((TypedByteArray) response.getBody()).getBytes());
                     // Reset list to show fresh data each time api called
                     mImageDataList.clear();
                     parseJsonResponse(jsonResponse);
                     setImageListAdapter();
                     changeVisibility(View.GONE, View.GONE);
-                } else {
+                }
+                else
+                {
                     Toast.makeText(getActivity(), R.string.empty_text_string, Toast.LENGTH_SHORT).show();
                     mProgressBar.setVisibility(View.GONE);
                 }
             }
 
             @Override
-            public void failure(RetrofitError error) {
+            public void failure(RetrofitError error)
+            {
                 changeVisibility(View.VISIBLE, View.GONE);
             }
         });
@@ -137,10 +158,15 @@ public class SearchImageFragment extends Fragment {
      * Set Adapter for recycler list of images after api hit.
      */
     private void setImageListAdapter() {
-        ImageListAdapter mAdapter = new ImageListAdapter(getActivity(), mImageDataList);
-        mImageList.setAdapter(mAdapter);
-        mImageList.scheduleLayoutAnimation();
-        mAdapter.notifyDataSetChanged();
+        if(!mImageDataList.isEmpty())
+        {
+            ImageListAdapter mAdapter = new ImageListAdapter(getActivity(), mImageDataList);
+            mImageList.setAdapter(mAdapter);
+            mAdapter.setItemClickListener(this);
+            mAdapter.notifyDataSetChanged();
+        }
+        else
+            Toast.makeText(getActivity(), R.string.empty_text_string, Toast.LENGTH_SHORT).show();
     }
 
     /**
@@ -181,5 +207,22 @@ public class SearchImageFragment extends Fragment {
         } catch (JSONException e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Get Device width in pixels
+     * @return
+     */
+    private String getWidthInPixels()
+    {
+        DisplayMetrics metrics = new DisplayMetrics();
+        getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        return String.valueOf(metrics.widthPixels);
+    }
+
+    @Override
+    public void onItemClick(View v, int position)
+    {
+        DialogUtils.showImage(getActivity(), (String) v.getTag());
     }
 }

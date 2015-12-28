@@ -26,6 +26,7 @@ public class ImageListAdapter extends RecyclerView.Adapter<ImageListAdapter.View
     private List<ImageData> mImageDataList;
     // Allows to remember the last item shown on screen
     private int lastPosition = -1;
+    private OnItemClickListener mOnItemClickListener;
 
 
     public ImageListAdapter(Context context, List<ImageData> mImageList)
@@ -49,7 +50,8 @@ public class ImageListAdapter extends RecyclerView.Adapter<ImageListAdapter.View
                 .placeholder(R.drawable.placeholder)
                 .error(R.drawable.placeholder)
                 .into(holder.searchedImage);
-        setAnimation(holder.cardView, position);
+        holder.searchedImage.setTag(data.getUrl());
+        setAnimation(holder.searchedImage, position);
     }
 
     @Override
@@ -59,19 +61,17 @@ public class ImageListAdapter extends RecyclerView.Adapter<ImageListAdapter.View
 
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         protected ImageView searchedImage;
-        protected CardView cardView;
 
         public ViewHolder(View itemView) {
             super(itemView);
             this.searchedImage = (ImageView) itemView.findViewById(R.id.searched_image);
-            this.cardView = (CardView) itemView.findViewById(R.id.card_view);
             itemView.setOnClickListener(this);
         }
 
         @Override
         public void onClick(View view) {
-            /*if(listener != null)
-                listener.onItemClick(view, getAdapterPosition());*/
+            if(mOnItemClickListener != null)
+                mOnItemClickListener.onItemClick(view, getAdapterPosition());
         }
     }
 
@@ -85,9 +85,14 @@ public class ImageListAdapter extends RecyclerView.Adapter<ImageListAdapter.View
     private void setAnimation(View viewToAnimate, int position) {
         // If the bound view wasn't previously displayed on screen, it's animated
         if (position > lastPosition) {
-            Animation animation = AnimationUtils.loadAnimation(mContext, android.R.anim.slide_in_left);
+            Animation animation = AnimationUtils.loadAnimation(mContext, R.anim.slide_in_bottom);
             viewToAnimate.startAnimation(animation);
             lastPosition = position;
         }
+    }
+
+    public void setItemClickListener(OnItemClickListener listener)
+    {
+        mOnItemClickListener = listener;
     }
 }

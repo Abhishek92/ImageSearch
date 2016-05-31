@@ -1,9 +1,7 @@
 package com.android.imagesearch.ui;
 
 
-import android.app.Dialog;
-import android.content.DialogInterface;
-import android.graphics.drawable.ColorDrawable;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
@@ -15,12 +13,8 @@ import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
-import android.view.animation.AnimationUtils;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.ProgressBar;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -29,7 +23,6 @@ import com.android.imagesearch.network.ImageSearchApiClient;
 import com.android.imagesearch.network.model.ImageData;
 import com.android.imagesearch.utils.ConnectionUtils;
 import com.android.imagesearch.utils.DialogUtils;
-import com.squareup.picasso.Picasso;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -56,6 +49,7 @@ public class SearchImageFragment extends Fragment implements ImageListAdapter.On
     private ProgressBar mProgressBar;
 
     private List<ImageData> mImageDataList = new ArrayList<>();
+    private ImageListAdapter mAdapter;
 
     public SearchImageFragment() {
         // Required empty public constructor
@@ -75,9 +69,9 @@ public class SearchImageFragment extends Fragment implements ImageListAdapter.On
         searchEt = (EditText) view.findViewById(R.id.frag_search_image_et);
         mEmptyText = (TextView) view.findViewById(R.id.emptyText);
         mProgressBar = (ProgressBar) view.findViewById(R.id.progressBar);
-
-        GridLayoutManager mGridLayoutManager = new GridLayoutManager(getActivity(), 2);
-        mImageList.setLayoutManager(mGridLayoutManager);
+        setGridLayoutManager(getResources().getConfiguration().orientation != Configuration.ORIENTATION_LANDSCAPE);
+        mAdapter = new ImageListAdapter(getActivity(), mImageDataList);
+        mImageList.setAdapter(mAdapter);
 
         if (ConnectionUtils.isNetworkConnected(getActivity())) {
             searchImages();
@@ -103,7 +97,7 @@ public class SearchImageFragment extends Fragment implements ImageListAdapter.On
             {
                 String searchTerm = charSequence.toString().trim();
                 // Starts search only when user type words more then 1.
-                if(searchTerm.length() > 1 && !TextUtils.isEmpty(searchTerm))
+                if (!TextUtils.isEmpty(searchTerm) && searchTerm.length() > 2)
                 {
                     changeVisibility(View.GONE, View.VISIBLE);
                     getImageList(searchTerm);
@@ -155,12 +149,22 @@ public class SearchImageFragment extends Fragment implements ImageListAdapter.On
     }
 
     /**
+     * Sets GridLayoutManager based on orientation
+     * For Portrait spanCount is 2 and for landscape spanCount is 3
+     * @param isPortrait
+     */
+    private void setGridLayoutManager(boolean isPortrait) {
+        GridLayoutManager mGridLayoutManager = new GridLayoutManager(getActivity(), isPortrait ? 2 : 3);
+        mImageList.setLayoutManager(mGridLayoutManager);
+    }
+
+    /**
      * Set Adapter for recycler list of images after api hit.
      */
     private void setImageListAdapter() {
         if(!mImageDataList.isEmpty())
         {
-            ImageListAdapter mAdapter = new ImageListAdapter(getActivity(), mImageDataList);
+            mAdapter = new ImageListAdapter(getActivity(), mImageDataList);
             mImageList.setAdapter(mAdapter);
             mAdapter.setItemClickListener(this);
             mAdapter.notifyDataSetChanged();
@@ -224,5 +228,12 @@ public class SearchImageFragment extends Fragment implements ImageListAdapter.On
     public void onItemClick(View v, int position)
     {
         DialogUtils.showImage(getActivity(), (String) v.getTag());
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        // Checks the orientation of the screen
+        setGridLayoutManager(getResources().getConfiguration().orientation != Configuration.ORIENTATION_LANDSCAPE);
     }
 }

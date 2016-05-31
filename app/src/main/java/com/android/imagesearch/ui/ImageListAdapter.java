@@ -7,7 +7,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.android.imagesearch.R;
 import com.android.imagesearch.network.model.ImageData;
@@ -49,33 +51,14 @@ public class ImageListAdapter extends RecyclerView.Adapter<ImageListAdapter.View
                 .placeholder(R.drawable.placeholder)
                 .error(R.drawable.placeholder)
                 .into(holder.searchedImage);
-        holder.searchedImage.setTag(data.getUrl());
-        setAnimation(holder.searchedImage, position);
+        holder.imageContainer.setTag(data.getUrl());
+        holder.imageTitleTv.setText(data.getTitle());
+        setAnimation(holder.imageContainer, position);
     }
 
     @Override
     public int getItemCount() {
         return mImageDataList.size();
-    }
-
-    public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-        protected ImageView searchedImage;
-
-        public ViewHolder(View itemView) {
-            super(itemView);
-            this.searchedImage = (ImageView) itemView.findViewById(R.id.searched_image);
-            itemView.setOnClickListener(this);
-        }
-
-        @Override
-        public void onClick(View view) {
-            if(mOnItemClickListener != null)
-                mOnItemClickListener.onItemClick(view, getAdapterPosition());
-        }
-    }
-
-    public interface OnItemClickListener {
-        void onItemClick(View v, int position);
     }
 
     /**
@@ -90,8 +73,31 @@ public class ImageListAdapter extends RecyclerView.Adapter<ImageListAdapter.View
         }
     }
 
-    public void setItemClickListener(OnItemClickListener listener)
-    {
+    public void setItemClickListener(OnItemClickListener listener) {
         mOnItemClickListener = listener;
+    }
+
+    public interface OnItemClickListener {
+        void onItemClick(View v, int position);
+    }
+
+    public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+        protected ImageView searchedImage;
+        protected TextView imageTitleTv;
+        protected FrameLayout imageContainer;
+
+        public ViewHolder(View itemView) {
+            super(itemView);
+            this.searchedImage = (ImageView) itemView.findViewById(R.id.searched_image);
+            this.imageTitleTv = (TextView) itemView.findViewById(R.id.image_title_tv);
+            this.imageContainer = (FrameLayout) itemView.findViewById(R.id.container);
+            this.imageContainer.setOnClickListener(this);
+        }
+
+        @Override
+        public void onClick(View view) {
+            if (mOnItemClickListener != null)
+                mOnItemClickListener.onItemClick(view, getAdapterPosition());
+        }
     }
 }

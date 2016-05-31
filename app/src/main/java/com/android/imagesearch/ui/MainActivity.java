@@ -23,6 +23,6 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         if(getSupportActionBar() != null)
-            getSupportActionBar().setTitle(getResources().getString(R.string.app_name));
+            getSupportActionBar().setTitle(getResources().getString(R.string.home_screen_name));
     }
 }
